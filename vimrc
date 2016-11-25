@@ -14,6 +14,9 @@ set showmode
 " 保存100个标记、所有的全局标记以及500行寄存器
 set viminfo='1000,f1,<500 
 
+" 启用鼠标
+set mouse=a
+
 
 """"""""""""""""""""""""""""""""""""""""""""""""""
 " => 文件编辑配置
@@ -22,7 +25,10 @@ set viminfo='1000,f1,<500
 " 显示行号
 set number
 
-" 配色方案
+" mac 访问剪切板
+set clipboard=unnamed
+
+"" 配色方案
 if(has('win32') || has('win64'))
     colorscheme desert
 else
@@ -32,14 +38,27 @@ endif
 " 打开自动缩进
 set autoindent
 
-" 智能对齐
-set smartindent
+" 智能对齐 注释掉为了 让注释行也自动缩进
+""set smartindent
 
 " 高亮显示对应的括号
 set showmatch
 
 " 对应括号高亮的时间（单位是十分之一秒）
 set matchtime=5
+
+" 突出显示当前行
+set cursorline
+
+" 突出显示当前列
+set cursorcolumn
+
+" 设置文本宽度为80 并高亮显示
+set textwidth=80
+set cc=+1
+
+" 突出显示80列
+set cc=80
 
 " 一个Tab键所占的列数
 set tabstop=4
@@ -70,6 +89,9 @@ if &t_Co > 2 || has("gui_running")
   syntax on
 endif
 
+" 让python语法高亮
+let python_highlight_all=1
+
 " 禁止vim换行时自动添加注释符号
 augroup Format-Options
     autocmd!
@@ -78,6 +100,12 @@ augroup Format-Options
     " This can be done as well instead of the previous line, for setting formatoptions as you choose:
 "    autocmd BufEnter * setlocal formatoptions=crqn2l1j
 augroup END
+
+" 用vsplit新建窗口，让新的放右边 
+set splitright    
+
+" 用split新建窗口，让新的放下面 
+set splitbelow    
 
 " 显示制表符和尾部空格,并用相应的符号显示
 "set list
@@ -98,27 +126,33 @@ set foldlevelstart=99       " 打开文件是默认不折叠代码
 "set foldclose=all          " 设置为自动关闭折叠                
 
 " 用空格键来开关折叠
-nnoremap <space> @=((foldclosed(line('.')) < 0) ? 'zc' : 'zo')<CR>
+nnoremap <space> za
 
 " 自动补全成对的括号和引号
 " http://blog.hotoo.me/post/vim-autocomplete-pairs.html
-inoremap ' ''<ESC>i
-inoremap " ""<ESC>i
-inoremap ( ()<ESC>i
-inoremap ) <c-r>=ClosePair(')')<CR>
-inoremap { {}<ESC>i
-inoremap } <c-r>=ClosePair('}')<CR>
-inoremap [ []<ESC>i
-inoremap ] <c-r>=ClosePair(']')<CR>
-inoremap < <><ESC>i
-inoremap > <c-r>=ClosePair('>')<CR>
-function ClosePair(char)
-    if getline('.')[col('.') - 1] == a:char
-        return "\<Right>"
-    else
-        return a:char
-    endif
-endf
+""inoremap ' ''<ESC>i
+""inoremap " ""<ESC>i
+""inoremap ( ()<ESC>i
+""inoremap ) <c-r>=ClosePair(')')<CR>
+""inoremap { {}<ESC>i
+""inoremap } <c-r>=ClosePair('}')<CR>
+""inoremap [ []<ESC>i
+""inoremap ] <c-r>=ClosePair(']')<CR>
+""inoremap < <><ESC>i
+""inoremap > <c-r>=ClosePair('>')<CR>
+""function ClosePair(char)
+""    if getline('.')[col('.') - 1] == a:char
+""        return "\<Right>"
+""    else
+""        return a:char
+""    endif
+""endf
+
+" js html css 缩进改变
+au BufNewFile,BufRead *.js, *.html, *.css
+\ set tabstop=2
+\ set softtabstop=2
+\ set shiftwidth=2
 
 
 """"""""""""""""""""""""""""""""""""""""""""""""""
@@ -161,6 +195,12 @@ function SyntaxOnOff()
     endif
 endfunction
 
+" split navigations
+nnoremap <C-J> <C-W><C-J>
+nnoremap <C-K> <C-W><C-K>
+nnoremap <C-L> <C-W><C-L>
+nnoremap <C-H> <C-W><C-H> 
+
 
 """"""""""""""""""""""""""""""""""""""""""""""""""
 " => 编码、字体配置
@@ -183,7 +223,7 @@ set fileencoding=utf-8
 set termencoding=utf-8
 
 " vim默认保存文件格式
-"set ff=unix
+set ff=unix
 
 " 设置英文字体，终端中vim无法设置字体，跟随终端的设置
 set guifont=Monaco:h12:cANSI
@@ -234,7 +274,7 @@ set laststatus=2
 
 " 配置状态栏显示文件绝对路径
 " set statusline=%F%m%r%h%w\ [FORMAT=%{&ff}]\ [TYPE=%Y]\ [ASCII=\%03.3b]\ [HEX=\%02.2B]\ [POS=%04l,%04v][%p%%]\ [LEN=%L]
-set statusline=%F\ [POS=%l,%v][%p%%]\ [LEN=%L]
+set statusline=%F\ [%{&ff}]\ [POS=%l,%v][%p%%]\ [LEN=%L]
 
 " 光标移动到buffer的顶部和底部时保持3行距离
 set scrolloff=3
@@ -253,8 +293,15 @@ set wildmenu
 set nobackup 
 set writebackup 
 
-" 在切换buffer时自动保存当前文件
-set autowrite
+" 保证文件在win和unix都可以使用，不过是vim中
+set sessionoptions+=unix,slash
+
+" 自动保存,失去焦点、却换buffer时自动保存
+au FocusLost * silent! up
+au BufLeave * silent! up
+
+" 正在编辑的文件在打开后被其他程序更新，则自动加载
+set autoread
 
 " 在处理未保存或只读文件的时候，弹出确认
 set confirm
@@ -273,6 +320,32 @@ autocmd BufReadPost *
     \ if line("'\"") > 0 && line("'\"") <= line("$") |
     \   exe "normal g'\"" |
     \ endif
+
+
+
+""""""""""""""""""""""""""""""""""""""""""""""""""
+" => 插件配置
+""""""""""""""""""""""""""""""""""""""""""""""""""
+
+" NERDTree 配置 F3开启和关闭树
+map <F3> :NERDTreeToggle<CR>
+let NERDTreeChDirMode=1
+"显示书签"
+let NERDTreeShowBookmarks=1
+"设置忽略文件类型"
+let NERDTreeIgnore=['\~$', '\.pyc$', '\.swp$']
+"窗口大小"
+let NERDTreeWinSize=15
+
+"缩进指示线"
+autocmd VimEnter * :IndentGuidesEnable
+let g:indent_guides_guide_size=1
+let g:indent_guides_start_level=2
+hi IndentGuideOdd ctermbg=black
+hi IndentGuideEven ctermbg=darkgrey
+ 
+"autopep8设置"
+let g:autopep8_disable_show_diff=1
 
 
 """"""""""""""""""""""""""""""""""""""""""""""""""
@@ -304,6 +377,29 @@ Plugin 'VundleVim/Vundle.vim'
 " 安装markdown插件
 Plugin 'godlygeek/tabular'
 Plugin 'plasticboy/vim-markdown'
+
+" 语法检查插件
+Plugin 'scrooloose/syntastic'
+
+" PEP8代码风格检查
+Plugin 'nvie/vim-flake8'
+
+" 配色方案
+Plugin 'altercation/vim-colors-solarized'
+
+" 树形文件浏览
+Plugin 'scrooloose/nerdtree'
+
+" 缩进指示线
+Plugin 'nathanaelkane/vim-indent-guides'
+
+" 括号自动补全
+Plugin 'jiangmiao/auto-pairs'
+
+" 自动格式化pep8格式
+Plugin 'tell-k/vim-autopep8'
+
+
 
 " All of your Plugins must be added before the following line
 call vundle#end()            " required
